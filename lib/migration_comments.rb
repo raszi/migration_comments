@@ -1,14 +1,14 @@
 require "migration_comments/version"
 require "migration_comments/schema_formatter"
 
+require 'schema_comments'
+
 require 'migration_comments/active_record/schema_dumper'
-require 'migration_comments/active_record/connection_adapters/comment_definition'
 require 'migration_comments/active_record/connection_adapters/column_definition'
 require 'migration_comments/active_record/connection_adapters/column'
 require 'migration_comments/active_record/connection_adapters/table'
 require 'migration_comments/active_record/connection_adapters/table_definition'
 require 'migration_comments/active_record/connection_adapters/alter_table'
-require 'migration_comments/active_record/connection_adapters/abstract_adapter'
 require 'migration_comments/active_record/connection_adapters/abstract_adapter/schema_creation'
 require 'migration_comments/active_record/connection_adapters/mysql_adapter'
 require 'migration_comments/active_record/connection_adapters/mysql2_adapter'
@@ -17,8 +17,6 @@ require 'migration_comments/active_record/connection_adapters/abstract_sqlite_ad
 require 'migration_comments/active_record/connection_adapters/sqlite_adapter'
 require 'migration_comments/active_record/connection_adapters/sqlite3_adapter'
 
-require 'active_record/connection_adapters/abstract_adapter'
-
 module MigrationComments
   def self.setup
     if ::ActiveRecord::VERSION::MAJOR == 2
@@ -26,7 +24,7 @@ module MigrationComments
     end
 
     base_names = %w(SchemaDumper) +
-      %w(ColumnDefinition Column Table TableDefinition AbstractAdapter).map{|name| "ConnectionAdapters::#{name}"}
+      %w(ColumnDefinition Column Table TableDefinition).map { |name| "ConnectionAdapters::#{name}" }
 
     base_names.each do |base_name|
       ar_class = "ActiveRecord::#{base_name}".constantize
@@ -52,32 +50,28 @@ module MigrationComments
     adapters = %w(PostgreSQL Mysql Mysql2)
     adapters << (::ActiveRecord::VERSION::MAJOR <= 3 ? "SQLite" : "SQLite3")
     adapters.each do |adapter|
-      begin
-        require("active_record/connection_adapters/#{adapter.downcase}_adapter")
-        adapter_class = ('::ActiveRecord::ConnectionAdapters::' << "#{adapter}Adapter").constantize
-        mc_class = ('MigrationComments::ActiveRecord::ConnectionAdapters::' << "#{adapter}Adapter").constantize
-        adapter_class.module_eval do
-          adapter_class.__send__(:include, mc_class)
-        end
-      rescue Exception => ex
+      begin require("active_record/connection_adapters/#{adapter.downcase}_adapter")
+      rescue LoadError => err
+        warn "Unable to load #{adapter} adapter: #{err.to_s}"
+        next
+      end
+      adapter_class = ('::ActiveRecord::ConnectionAdapters::' << "#{adapter}Adapter").constantize
+      mc_class = ('MigrationComments::ActiveRecord::ConnectionAdapters::' << "#{adapter}Adapter").constantize
+      adapter_class.module_eval do
+        adapter_class.__send__(:include, mc_class)
       end
     end
 
     # annotations are not required for this gem, but if they exist they should be updated
     begin
-      begin # first try to load from the 'annotate' gem
-        require 'annotate/annotate_models'
-      rescue Exception => ex
-        # continue as it may be already accessible through a plugin
-      end
+      begin require 'annotate/annotate_models'
+      rescue LoadError => err; end # continue as it may be already accessible through a plugin
       gem_class = AnnotateModels
       # don't require this until after the original AnnotateModels loads to avoid namespace confusion
       require 'migration_comments/annotate_models'
       mc_class = MigrationComments::AnnotateModels
-      unless gem_class.ancestors.include?(mc_class)
-        gem_class.__send__(:include, mc_class)
-      end
-    rescue Exception => ex
+      gem_class.__send__(:include, mc_class) unless gem_class.ancestors.include?(mc_class)
+    rescue LoadError => err
       # if we got here, don't bother installing comments into annotations
     end
   end

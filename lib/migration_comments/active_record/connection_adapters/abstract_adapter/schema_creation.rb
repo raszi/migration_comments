@@ -18,7 +18,7 @@ module MigrationComments::ActiveRecord::ConnectionAdapters::AbstractAdapter
     def add_column_options_with_migration_comments!(sql, options)
       sql = add_column_options_without_migration_comments!(sql, options)
       if options.keys.include?(:comment) && !@conn.independent_comments?
-        sql <<  MigrationComments::ActiveRecord::ConnectionAdapters::CommentDefinition.new(@conn, nil, nil, options[:comment]).to_sql
+        sql << SchemaComments::ActiveRecord::ConnectionAdapters::CommentDefinition.new(@conn, nil, nil, options[:comment]).to_sql
       end
       sql
     end
