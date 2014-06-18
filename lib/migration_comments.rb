@@ -31,9 +31,7 @@ module MigrationComments
     base_names.each do |base_name|
       ar_class = "ActiveRecord::#{base_name}".constantize
       mc_class = "MigrationComments::ActiveRecord::#{base_name}".constantize
-      unless ar_class.ancestors.include?(mc_class)
-        ar_class.__send__(:include, mc_class)
-      end
+      ar_class.__send__(:include, mc_class) unless ar_class.ancestors.include?(mc_class)
     end
 
     # Rails 4 introduces some new models that were not previously present
