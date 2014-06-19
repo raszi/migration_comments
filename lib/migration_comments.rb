@@ -51,8 +51,7 @@ module MigrationComments
     adapters << (::ActiveRecord::VERSION::MAJOR <= 3 ? "SQLite" : "SQLite3")
     adapters.each do |adapter|
       begin require("active_record/connection_adapters/#{adapter.downcase}_adapter")
-      rescue LoadError => err
-        warn "Unable to load #{adapter} adapter: #{err.to_s}"
+      rescue LoadError
         next
       end
       adapter_class = ('::ActiveRecord::ConnectionAdapters::' << "#{adapter}Adapter").constantize
@@ -71,7 +70,7 @@ module MigrationComments
       require 'migration_comments/annotate_models'
       mc_class = MigrationComments::AnnotateModels
       gem_class.__send__(:include, mc_class) unless gem_class.ancestors.include?(mc_class)
-    rescue LoadError => err
+    rescue LoadError, NameError
       # if we got here, don't bother installing comments into annotations
     end
   end
