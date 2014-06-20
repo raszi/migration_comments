@@ -1,7 +1,7 @@
 module MigrationComments::ActiveRecord::ConnectionAdapters
   module SQLiteAdapter
     include AbstractSQLiteAdapter
-    include SchemaComments::ActiveRecord::ConnectionAdapters::AbstractSQLiteAdapter
+    include ActiveRecord::Comments::ConnectionAdapters::AbstractSQLiteAdapter
 
     def self.included(base)
       base.module_eval do

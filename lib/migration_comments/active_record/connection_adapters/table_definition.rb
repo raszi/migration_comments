@@ -10,7 +10,7 @@ module MigrationComments::ActiveRecord::ConnectionAdapters
     end
 
     def comment(text)
-      @table_comment = SchemaComments::ActiveRecord::ConnectionAdapters::CommentDefinition.new(base, nil, nil, text)
+      @table_comment = ActiveRecord::Comments::ConnectionAdapters::CommentDefinition.new(base, nil, nil, text)
       self
     end
 
@@ -18,7 +18,7 @@ module MigrationComments::ActiveRecord::ConnectionAdapters
       column_without_migration_comments(name, type, options)
       if options.has_key?(:comment)
         col = self[name]
-        col.comment = SchemaComments::ActiveRecord::ConnectionAdapters::CommentDefinition.new(base, nil, name, options[:comment])
+        col.comment = ActiveRecord::Comments::ConnectionAdapters::CommentDefinition.new(base, nil, name, options[:comment])
       end
       self
     end

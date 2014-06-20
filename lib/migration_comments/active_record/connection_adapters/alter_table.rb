@@ -10,7 +10,7 @@ module MigrationComments::ActiveRecord::ConnectionAdapters
       add_column_without_migration_comments(name, type, options)
       if options.keys.include?(:comment)
         column = @adds.last
-        column.comment = SchemaComments::ActiveRecord::ConnectionAdapters::CommentDefinition.new(nil, @td, name, options[:comment])
+        column.comment = ActiveRecord::Comments::ConnectionAdapters::CommentDefinition.new(nil, @td, name, options[:comment])
       end
     end
   end
