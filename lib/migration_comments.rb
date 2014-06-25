@@ -1,7 +1,7 @@
 require "migration_comments/version"
 require "migration_comments/schema_formatter"
 
-require 'activerecord_comments'
+require 'active_record/comments'
 
 require 'migration_comments/active_record/schema_dumper'
 require 'migration_comments/active_record/connection_adapters/column_definition'
